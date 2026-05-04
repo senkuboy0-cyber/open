@@ -7,17 +7,17 @@ ENV NODE_OPTIONS="--max-old-space-size=400"
 # Set the root working directory
 WORKDIR /app
 
-# Copy the configuration file into the container
-COPY openclaw.json /app/openclaw.json
-
 # Install OpenClaw globally omitting development dependencies
 RUN npm install -g openclaw@latest --omit=dev
 
-# Explicitly tell OpenClaw where our custom configuration file is located
-ENV OPENCLAW_CONFIG_FILE="/app/openclaw.json"
+# --- THE ULTIMATE OVERRIDE (Environment Variables) ---
+# These strict variables CANNOT be overwritten or deleted by OpenClaw
+ENV OPENCLAW_GATEWAY_AUTH_TOKEN="admin1234"
+ENV OPENCLAW_GATEWAY_CONTROLUI_ALLOWEDORIGINS='["*"]'
+ENV OPENCLAW_GATEWAY_CONTROLUI_DANGEROUSLYALLOWHOSTHEADERORIGINFALLBACK="true"
 
 # Expose Render's preferred default web port
 EXPOSE 10000
 
-# Start gateway bypassing the interactive setup prompt and binding to external proxy
+# Start gateway with all external routing presets
 CMD ["openclaw", "gateway", "--allow-unconfigured", "--bind", "lan", "--port", "10000"]
