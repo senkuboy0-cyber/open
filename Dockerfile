@@ -10,17 +10,16 @@ WORKDIR /app
 # Install OpenClaw globally omitting development dependencies
 RUN npm install -g openclaw@latest --omit=dev
 
-# Create the exact directory OpenClaw expects and lock config
+# Create the exact directory OpenClaw expects and copy config
 RUN mkdir -p /root/.openclaw
 COPY openclaw.json /root/.openclaw/openclaw.json
 RUN chmod 444 /root/.openclaw/openclaw.json
 
-# Copy our Auto-Pairing Bot script
-COPY start.sh /app/start.sh
-RUN chmod +x /app/start.sh
+# Copy our powerful Node.js auto-pairing bot
+COPY auto.js /app/auto.js
 
 # Expose Render's preferred default web port
 EXPOSE 10000
 
-# Start gateway through the auto-pairing bot
-CMD ["/app/start.sh"]
+# Start the gateway through the Super-Bot wrapper
+CMD ["node", "auto.js"]
