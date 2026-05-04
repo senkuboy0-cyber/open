@@ -16,6 +16,12 @@ RUN npm install -g openclaw@latest --omit=dev
 # Force OpenClaw to utilize our configuration file
 ENV OPENCLAW_CONFIG_FILE="/app/openclaw.json"
 
+# --- RENDER NETWORK FIX ---
+# Force binding to 0.0.0.0 so Render's proxy can detect the port
+ENV OPENCLAW_GATEWAY_BIND="0.0.0.0"
+ENV OPENCLAW_GATEWAY_PORT="10000"
+ENV PORT="10000"
+
 # Expose Render's preferred default web port
 EXPOSE 10000
 

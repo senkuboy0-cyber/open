@@ -3,6 +3,9 @@
     "mode": "local",
     "bind": "0.0.0.0",
     "port": 10000,
+    "auth": {
+      "token": "admin1234"
+    },
     "controlUi": {
       "allowedOrigins": [
         "*"
