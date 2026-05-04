@@ -1,7 +1,9 @@
 {
   "gateway": {
     "auth": {
-      "token": "admin1234"
+      "token": "admin1234",
+      "devicePairing": false,
+      "requireDevicePairing": false
     },
     "controlUi": {
       "allowedOrigins": [
