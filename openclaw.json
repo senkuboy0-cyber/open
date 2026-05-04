@@ -1,6 +1,6 @@
 {
   "gateway": {
-    "bind": "0.0.0.0",
+    "bind": "lan",
     "port": 10000,
     "auth": {
       "token": "admin1234"
