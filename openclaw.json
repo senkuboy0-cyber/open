@@ -9,11 +9,6 @@
       ],
       "dangerouslyAllowHostHeaderOriginFallback": true,
       "allowInsecureAuth": true
-    },
-    "http": {
-      "securityHeaders": {
-        "strictTransportSecurity": false
-      }
     }
   }
 }
