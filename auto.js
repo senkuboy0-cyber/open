@@ -1,34 +1,35 @@
-const { spawn, execSync } = require('child_process');
+const { spawn } = require('child_process');
 
 const TOKEN = 'admin1234';
 const PORT = '10000';
-const GATEWAY_URL = `ws://127.0.0.1:${PORT}`;
+const BASE = `http://127.0.0.1:${PORT}`;
+const HEADERS = { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' };
 
-const approveEnv = {
-  ...process.env,
-  OPENCLAW_GATEWAY_TOKEN: TOKEN,
-  OPENCLAW_REMOTE_URL: GATEWAY_URL,
-};
+console.log("[BOT] Started");
 
-console.log("[BOT] OpenClaw Auto-Pairing Started");
-
-const claw = spawn('openclaw', [
-  'gateway', '--allow-unconfigured', '--bind', 'lan', '--port', PORT
-]);
+const claw = spawn('openclaw', ['gateway', '--allow-unconfigured', '--bind', 'lan', '--port', PORT]);
 
 let gatewayReady = false;
 
-function tryApprove() {
+async function tryApprove() {
   if (!gatewayReady) return;
   try {
-    console.log('[BOT] Checking for pending devices...');
-    const result = execSync(
-      `openclaw devices approve --latest --url ${GATEWAY_URL} --token ${TOKEN}`,
-      { env: approveEnv, encoding: 'utf8' }
-    );
-    console.log('[BOT] ✅ Approved:', result);
+    // Pending device list আনো
+    const res = await fetch(`${BASE}/api/v1/devices/pending`, { headers: HEADERS });
+    const data = await res.json();
+    const pending = data?.devices || data?.pending || [];
+    
+    for (const device of pending) {
+      const id = device.id || device.requestId || device.deviceId;
+      if (!id) continue;
+      console.log(`[BOT] Approving device: ${id}`);
+      await fetch(`${BASE}/api/v1/devices/${id}/approve`, {
+        method: 'POST', headers: HEADERS
+      });
+      console.log('[BOT] ✅ Approved! Refresh browser.');
+    }
   } catch (e) {
-    console.log('[BOT] No pending or error:', e.message.slice(0, 100));
+    // silent
   }
 }
 
@@ -39,7 +40,7 @@ function handleLog(data) {
   process.stdout.write(log);
   if (log.includes('[gateway] ready')) {
     gatewayReady = true;
-    console.log('[BOT] Gateway ready!');
+    console.log('[BOT] Gateway ready, polling...');
   }
 }
 
