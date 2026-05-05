@@ -2,40 +2,35 @@ const { spawn, execSync } = require('child_process');
 
 console.log("[BOT] OpenClaw Auto-Pairing Started");
 
+const gatewayEnv = {
+  ...process.env,
+  OPENCLAW_GATEWAY_TOKEN: process.env.OPENCLAW_GATEWAY_TOKEN || 'admin1234'
+};
+
 const claw = spawn('openclaw', [
   'gateway', '--allow-unconfigured', '--bind', 'lan', '--port', '10000'
-]);
+], { env: gatewayEnv });
 
-function handleLog(data) {
-  const log = data.toString();
-  process.stdout.write(log);
-
-  const match = log.match(/requestId[:\s]+([a-f0-9-]{36})/i);
-  if (match && match[1]) {
-    const reqId = match[1];
-    console.log(`\n[BOT] Pairing ID found: ${reqId}`);
-    
-    setTimeout(() => {
-      try {
-        execSync(`openclaw device-pair accept ${reqId}`, { stdio: 'inherit' });
-        console.log('[BOT] ✅ Pairing accepted!');
-      } catch (e) {
-        try {
-          execSync(`openclaw pair accept ${reqId}`, { stdio: 'inherit' });
-          console.log('[BOT] ✅ Pairing accepted (alt command)!');
-        } catch (e2) {
-          console.log('[BOT] ❌ Both commands failed:', e2.message);
-        }
-      }
-    }, 1000);
+// Gateway ready হলে auto-approve চালাও
+let approved = false;
+function tryApprove() {
+  if (approved) return;
+  try {
+    console.log('[BOT] Checking for pending devices...');
+    execSync(
+      'openclaw devices approve --latest',
+      { env: gatewayEnv, stdio: 'inherit' }
+    );
+    approved = true;
+    console.log('[BOT] ✅ Device approved! Refresh browser.');
+  } catch (e) {
+    // এখনো কেউ connect করেনি, পরে আবার চেষ্টা করবো
   }
 }
 
-// stderr এবং stdout দুটোই দেখো
-claw.stdout.on('data', handleLog);
-claw.stderr.on('data', handleLog);
+// প্রতি ৫ সেকেন্ডে check করো
+setInterval(tryApprove, 5000);
 
-claw.on('exit', (code) => {
-  console.log(`[BOT] Gateway exited with code ${code}`);
-  process.exit(code);
-});
+claw.stdout.on('data', d => process.stdout.write(d));
+claw.stderr.on('data', d => process.stderr.write(d));
+claw.on('exit', code => process.exit(code));
