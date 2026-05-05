@@ -1,34 +1,41 @@
 const { spawn, execSync } = require('child_process');
 
-console.log("==========================================");
-console.log("[SUPER-BOT] OpenClaw Auto-Bypass Activated");
-console.log("==========================================");
+console.log("[BOT] OpenClaw Auto-Pairing Started");
 
-// Start OpenClaw Gateway
-const claw = spawn('openclaw', ['gateway', '--allow-unconfigured', '--bind', 'lan', '--port', '10000']);
+const claw = spawn('openclaw', [
+  'gateway', '--allow-unconfigured', '--bind', 'lan', '--port', '10000'
+]);
 
-claw.stdout.on('data', (data) => {
-    const log = data.toString();
-    process.stdout.write(log); // Keep showing normal logs in Render dashboard
+function handleLog(data) {
+  const log = data.toString();
+  process.stdout.write(log);
 
-    // Hunt for the pairing ID using Regex
-    const match = log.match(/requestId:\s*([a-f0-9\-]+)/i);
-    if (match && match[1]) {
-        const reqId = match[1];
-        console.log(`\n[SUPER-BOT] 🔥 Device pairing intercepted! ID: ${reqId}`);
-        console.log(`[SUPER-BOT] ⚡ Forcing acceptance...`);
-        
+  const match = log.match(/requestId[:\s]+([a-f0-9-]{36})/i);
+  if (match && match[1]) {
+    const reqId = match[1];
+    console.log(`\n[BOT] Pairing ID found: ${reqId}`);
+    
+    setTimeout(() => {
+      try {
+        execSync(`openclaw device-pair accept ${reqId}`, { stdio: 'inherit' });
+        console.log('[BOT] ✅ Pairing accepted!');
+      } catch (e) {
         try {
-            // Force the pairing acceptance instantly
-            const result = execSync(`openclaw pair accept ${reqId}`);
-            console.log(`[SUPER-BOT] ✅ Bypassed successfully!`);
-            console.log(`[SUPER-BOT] 👉 REFRESH YOUR BROWSER NOW!`);
-        } catch (err) {
-            console.log(`[SUPER-BOT] ❌ Failed to bypass: ${err.message}`);
+          execSync(`openclaw pair accept ${reqId}`, { stdio: 'inherit' });
+          console.log('[BOT] ✅ Pairing accepted (alt command)!');
+        } catch (e2) {
+          console.log('[BOT] ❌ Both commands failed:', e2.message);
         }
-    }
-});
+      }
+    }, 1000);
+  }
+}
 
-claw.stderr.on('data', (data) => {
-    process.stderr.write(data.toString());
+// stderr এবং stdout দুটোই দেখো
+claw.stdout.on('data', handleLog);
+claw.stderr.on('data', handleLog);
+
+claw.on('exit', (code) => {
+  console.log(`[BOT] Gateway exited with code ${code}`);
+  process.exit(code);
 });
