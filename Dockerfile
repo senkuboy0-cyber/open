@@ -7,6 +7,12 @@ ENV NODE_OPTIONS="--max-old-space-size=400"
 # Set the root working directory
 WORKDIR /app
 
+# Copy package.json first for better caching
+COPY package.json /app/package.json
+
+# Install dependencies
+RUN cd /app && npm install
+
 # Install OpenClaw globally omitting development dependencies
 RUN npm install -g openclaw@latest --omit=dev
 
@@ -15,11 +21,11 @@ RUN mkdir -p /root/.openclaw
 COPY openclaw.json /root/.openclaw/openclaw.json
 RUN chmod 444 /root/.openclaw/openclaw.json
 
-# Copy our powerful Node.js auto-pairing bot
+# Copy our proxy bot
 COPY auto.js /app/auto.js
 
 # Expose Render's preferred default web port
 EXPOSE 10000
 
-# Start the gateway through the Super-Bot wrapper
+# Start the proxy server
 CMD ["node", "auto.js"]
