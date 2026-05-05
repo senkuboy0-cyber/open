@@ -1,14 +1,20 @@
 const { spawn, execSync } = require('child_process');
 
-console.log("[BOT] OpenClaw Auto-Pairing Started");
-
-const TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || 'admin1234';
-const PORT = process.env.OPENCLAW_GATEWAY_PORT || '10000';
+const TOKEN = 'admin1234';
+const PORT = '10000';
 const GATEWAY_URL = `ws://127.0.0.1:${PORT}`;
+
+const approveEnv = {
+  ...process.env,
+  OPENCLAW_GATEWAY_TOKEN: TOKEN,
+  OPENCLAW_REMOTE_URL: GATEWAY_URL,
+};
+
+console.log("[BOT] OpenClaw Auto-Pairing Started");
 
 const claw = spawn('openclaw', [
   'gateway', '--allow-unconfigured', '--bind', 'lan', '--port', PORT
-], { env: { ...process.env } });
+]);
 
 let gatewayReady = false;
 
@@ -16,17 +22,16 @@ function tryApprove() {
   if (!gatewayReady) return;
   try {
     console.log('[BOT] Checking for pending devices...');
-    execSync(
-      `openclaw devices approve --latest --url ${GATEWAY_URL} --token ${TOKEN}`,
-      { stdio: 'inherit' }
+    const result = execSync(
+      `openclaw devices approve --latest --url ${GATEWAY_URL}`,
+      { env: approveEnv, encoding: 'utf8' }
     );
-    console.log('[BOT] ✅ Device approved! Refresh browser.');
+    console.log('[BOT] ✅ Approved:', result);
   } catch (e) {
-    // কেউ connect করেনি এখনো
+    console.log('[BOT] No pending or error:', e.message.slice(0, 100));
   }
 }
 
-// প্রতি ৩ সেকেন্ডে check
 setInterval(tryApprove, 3000);
 
 function handleLog(data) {
@@ -34,7 +39,7 @@ function handleLog(data) {
   process.stdout.write(log);
   if (log.includes('[gateway] ready')) {
     gatewayReady = true;
-    console.log('[BOT] Gateway is ready, starting approval loop...');
+    console.log('[BOT] Gateway ready!');
   }
 }
 
