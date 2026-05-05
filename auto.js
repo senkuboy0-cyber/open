@@ -4,6 +4,9 @@ const DEVICES_DIR = '/root/.openclaw/devices';
 const PENDING = `${DEVICES_DIR}/pending.json`;
 const APPROVED = `${DEVICES_DIR}/approved.json`;
 
+// folder না থাকলে বানাও
+fs.mkdirSync(DEVICES_DIR, { recursive: true });
+
 function autoApprove() {
   try {
     if (!fs.existsSync(PENDING)) return;
