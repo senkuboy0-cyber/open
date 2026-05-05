@@ -23,7 +23,7 @@ function tryApprove() {
   try {
     console.log('[BOT] Checking for pending devices...');
     const result = execSync(
-      `openclaw devices approve --latest --url ${GATEWAY_URL}`,
+      `openclaw devices approve --latest --url ${GATEWAY_URL} --token ${TOKEN}`,
       { env: approveEnv, encoding: 'utf8' }
     );
     console.log('[BOT] ✅ Approved:', result);
