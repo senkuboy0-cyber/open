@@ -1,0 +1,6 @@
+{
+  "name": "openclaw-proxy",
+  "dependencies": {
+    "http-proxy": "^1.18.1"
+  }
+}
