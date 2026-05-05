@@ -1,46 +1,34 @@
-const { spawn, exec } = require('child_process');
+const { spawn, execSync } = require('child_process');
 
 console.log("==========================================");
-console.log("[SUPER-BOT V3] Ultimate Bypass Engaged");
+console.log("[SUPER-BOT] OpenClaw Auto-Bypass Activated");
 console.log("==========================================");
 
 // Start OpenClaw Gateway
 const claw = spawn('openclaw', ['gateway', '--allow-unconfigured', '--bind', 'lan', '--port', '10000']);
 
-const handleLog = (data) => {
+claw.stdout.on('data', (data) => {
     const log = data.toString();
-    process.stdout.write(log);
+    process.stdout.write(log); // Keep showing normal logs in Render dashboard
 
-    // Strategy 1: Real-time Interception via Regex
+    // Hunt for the pairing ID using Regex
     const match = log.match(/requestId:\s*([a-f0-9\-]+)/i);
     if (match && match[1]) {
-        acceptPair(match[1]);
-    }
-};
-
-const acceptPair = (id) => {
-    console.log(`\n[SUPER-BOT] 🎯 Intercepted Request: ${id}`);
-    exec(`openclaw pair accept ${id}`, (err) => {
-        if (!err) console.log(`[SUPER-BOT] ✅ Successfully Bypassed! Refresh now.`);
-    });
-};
-
-// Listen to both streams
-claw.stdout.on('data', handleLog);
-claw.stderr.on('data', handleLog);
-
-// Strategy 2: Brute-Force Scanning (Every 5 seconds)
-// This will try to accept any pending request even if the log fails
-setInterval(() => {
-    exec('openclaw pair list', (err, stdout) => {
-        if (!err && stdout.includes('pending')) {
-            const pendingIds = stdout.match(/[a-f0-9\-]{36}/g);
-            if (pendingIds) {
-                pendingIds.forEach(id => {
-                    console.log(`[SUPER-BOT] 🛡️  Found pending request in list: ${id}`);
-                    acceptPair(id);
-                });
-            }
+        const reqId = match[1];
+        console.log(`\n[SUPER-BOT] 🔥 Device pairing intercepted! ID: ${reqId}`);
+        console.log(`[SUPER-BOT] ⚡ Forcing acceptance...`);
+        
+        try {
+            // Force the pairing acceptance instantly
+            const result = execSync(`openclaw pair accept ${reqId}`);
+            console.log(`[SUPER-BOT] ✅ Bypassed successfully!`);
+            console.log(`[SUPER-BOT] 👉 REFRESH YOUR BROWSER NOW!`);
+        } catch (err) {
+            console.log(`[SUPER-BOT] ❌ Failed to bypass: ${err.message}`);
         }
-    });
-}, 5000);
+    }
+});
+
+claw.stderr.on('data', (data) => {
+    process.stderr.write(data.toString());
+});
