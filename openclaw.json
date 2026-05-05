@@ -3,10 +3,11 @@
     "auth": {
       "token": "admin1234"
     },
+    "devicePairing": {
+      "enabled": false
+    },
     "controlUi": {
-      "allowedOrigins": [
-        "*"
-      ],
+      "allowedOrigins": ["*"],
       "dangerouslyAllowHostHeaderOriginFallback": true,
       "allowInsecureAuth": true
     }
